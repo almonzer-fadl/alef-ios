@@ -47,14 +47,15 @@ struct AuthView: View {
                     Spacer().frame(height: 60)
 
                     // ── Logo ─────────────────────────────────────────
-                    Text("أ")
-                        .font(.system(size: 56, weight: .ultraLight))
-                        .foregroundColor(.alefGold)
+                    Image("LogoIcon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64, height: 64)
 
-                    Text("alef")
-                        .font(AlefFont.heavy(24))
-                        .foregroundColor(.alefText)
-                        .tracking(4)
+                    Image("Wordmark")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 20)
                         .padding(.top, 4)
 
                     Spacer().frame(height: 48)

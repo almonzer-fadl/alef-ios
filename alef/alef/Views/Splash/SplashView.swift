@@ -3,13 +3,13 @@
 //  alef
 //
 //  The first thing users see when opening the app.
-//  Shows the أ logo with a subtle gold glow, then transitions
+//  Shows the triangle logo mark with a subtle glow, then transitions
 //  to onboarding (first launch) or the main app (returning user).
 //
 //  Animation sequence:
-//  1. Gold radial glow fades in
-//  2. أ logo scales up with spring animation
-//  3. "alef" text slides in
+//  1. Radial glow fades in
+//  2. Triangle mark scales up with spring animation
+//  3. Wordmark slides in below
 //  4. Tagline fades in
 //  5. After 2.2 seconds, transitions to next screen
 //
@@ -29,10 +29,10 @@ struct SplashView: View {
         ZStack {
             Color.alefBg.ignoresSafeArea()
 
-            // Subtle radial glow behind the logo — uses brand gold
+            // Subtle radial glow behind the logo
             if showGlow {
                 RadialGradient(
-                    colors: [Color.alefGold.opacity(0.08), Color.clear],
+                    colors: [Color.alefText.opacity(0.04), Color.clear],
                     center: .center,
                     startRadius: 0,
                     endRadius: 200
@@ -41,22 +41,23 @@ struct SplashView: View {
                 .transition(.opacity)
             }
 
-            VStack(spacing: 24) {
+            VStack(spacing: 16) {
                 Spacer()
 
-                // The أ logo — brand gold, the only place this colour dominates
-                Text("أ")
-                    .font(.system(size: 120, weight: .ultraLight))
-                    .foregroundColor(.alefGold)
+                // Triangle logo mark — the actual logo asset
+                Image("LogoIcon")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
                     .opacity(showLogo ? 1 : 0)
                     .scaleEffect(showLogo ? 1 : 0.6)
                     .animation(.spring(response: 0.8, dampingFraction: 0.7), value: showLogo)
 
-                // App name
-                Text("alef")
-                    .font(AlefFont.heavy(32))
-                    .foregroundColor(.alefText)
-                    .tracking(6)
+                // Wordmark — the geometric "alef" text logo
+                Image("Wordmark")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 28)
                     .opacity(showLogo ? 1 : 0)
                     .offset(y: showLogo ? 0 : 10)
                     .animation(.easeOut(duration: 0.6).delay(0.3), value: showLogo)
