@@ -38,12 +38,9 @@ struct MainTabView: View {
                         color: .alefGold
                     )
                 case 1:
-                    PlaceholderTab(
-                        title: "Habits",
-                        icon: "checkmark.circle.fill",
-                        subtitle: "Build streaks, stay consistent",
-                        color: .alefHabits
-                    )
+                    NavigationStack {
+                        HabitsListView()
+                    }
                 case 2:
                     PlaceholderTab(
                         title: "Library",
