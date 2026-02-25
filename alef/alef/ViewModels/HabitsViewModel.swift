@@ -17,6 +17,7 @@
 //
 
 import SwiftUI
+import Combine
 
 @MainActor
 final class HabitsViewModel: ObservableObject {
