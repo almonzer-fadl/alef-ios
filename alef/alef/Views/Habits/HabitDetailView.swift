@@ -2,14 +2,17 @@
 //  HabitDetailView.swift
 //  alef
 //
-//  Detail screen for a single habit.
-//  Shows streak count, completion calendar heatmap, and stats.
+//  Detail screen for a single habit — streak, calendar, stats.
 //
-//  Accessed by tapping a habit card in the daily checklist.
-//  The heatmap uses a GitHub-style contribution grid — each cell
-//  represents a day, coloured by completion status.
+//  Layout (top to bottom):
+//  1. Streak card — large number with flame icon
+//  2. Stats row — total done, logged, success rate
+//  3. Calendar heatmap — monthly view with coloured day circles
+//  4. Recent entries — last 10 log entries
+//  5. Actions — edit/delete
 //
-//  Also provides edit and delete actions.
+//  Inspired by Grit: per-habit calendar with coloured dots,
+//  streak prominently displayed, stats summary row.
 //
 
 import SwiftUI
@@ -22,7 +25,9 @@ struct HabitDetailView: View {
     @State private var entries: [HabitEntry] = []
     @State private var isLoading = true
     @State private var streak = 0
+    @State private var bestStreak = 0
     @State private var showDeleteAlert = false
+    @State private var displayedMonth = Date()
     @Environment(\.dismiss) private var dismiss
 
     private let service = HabitService()
@@ -43,13 +48,13 @@ struct HabitDetailView: View {
                         // ── Stats row ────────────────────────────
                         statsRow(habit: habit)
 
-                        // ── Heatmap calendar ─────────────────────
-                        heatmapSection(habit: habit)
+                        // ── Monthly calendar ─────────────────────
+                        calendarSection(habit: habit)
 
                         // ── Recent entries ───────────────────────
-                        recentEntries(habit: habit)
+                        recentSection(habit: habit)
 
-                        // ── Delete button ────────────────────────
+                        // ── Delete ───────────────────────────────
                         Button(role: .destructive) {
                             showDeleteAlert = true
                         } label: {
@@ -58,7 +63,7 @@ struct HabitDetailView: View {
                                 .foregroundColor(.alefError)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 48)
-                                .background(Color.alefError.opacity(0.1))
+                                .background(Color.alefError.opacity(0.08))
                                 .cornerRadius(12)
                         }
 
@@ -94,64 +99,78 @@ struct HabitDetailView: View {
             habit = allHabits.first { $0.id == habitId }
             entries = try await service.fetchLogs(habitId: habitId, token: token)
             if let h = habit {
-                streak = HabitsViewModel.calculateStreak(entries: entries, goalValue: h.goalValue ?? 1)
+                let goalVal = h.goalValue ?? 1
+                streak = HabitsViewModel.calculateStreak(entries: entries, goalValue: goalVal)
+                bestStreak = calculateBestStreak(entries: entries, goalValue: goalVal)
             }
-        } catch {
-            // Silently fail — could show error state
-        }
+        } catch {}
         isLoading = false
     }
 
     // MARK: - Streak Card
 
     private func streakCard(habit: Habit) -> some View {
-        VStack(spacing: 8) {
-            Text("\(streak)")
-                .font(AlefFont.Rounded.heavy(56))
-                .foregroundColor(habit.swiftUIColor)
+        HStack(spacing: 24) {
+            // Current streak
+            VStack(spacing: 6) {
+                HStack(spacing: 6) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.orange)
+                    Text("\(streak)")
+                        .font(AlefFont.Rounded.heavy(44))
+                        .foregroundColor(.alefText)
+                }
+                Text("Current Streak")
+                    .font(AlefFont.medium(13))
+                    .foregroundColor(.alefTextSecondary)
+            }
 
-            Text(streak == 1 ? "day streak" : "day streak")
-                .font(AlefFont.medium(15))
-                .foregroundColor(.alefTextSecondary)
+            // Divider
+            Rectangle()
+                .fill(Color.alefBorder)
+                .frame(width: 1, height: 50)
+
+            // Best streak
+            VStack(spacing: 6) {
+                Text("\(bestStreak)")
+                    .font(AlefFont.Rounded.heavy(44))
+                    .foregroundColor(habit.swiftUIColor)
+                Text("Best Streak")
+                    .font(AlefFont.medium(13))
+                    .foregroundColor(.alefTextSecondary)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
+        .padding(.vertical, 24)
         .background(
             RoundedRectangle(cornerRadius: AlefLayout.cardRadiusLarge)
-                .fill(habit.swiftUIColor.opacity(0.08))
+                .fill(Color.alefSurface)
         )
         .overlay(
             RoundedRectangle(cornerRadius: AlefLayout.cardRadiusLarge)
-                .stroke(habit.swiftUIColor.opacity(0.2), lineWidth: 1)
+                .stroke(Color.alefBorder, lineWidth: 1)
         )
     }
 
     // MARK: - Stats Row
 
     private func statsRow(habit: Habit) -> some View {
-        HStack(spacing: 12) {
-            statCard(
-                value: "\(entries.filter { $0.value >= (habit.goalValue ?? 1) }.count)",
-                label: "Total Done",
-                color: .alefSuccess
-            )
-            statCard(
-                value: "\(entries.count)",
-                label: "Total Logged",
-                color: .alefHealth
-            )
-            statCard(
-                value: completionRate(habit: habit),
-                label: "Success Rate",
-                color: .alefMovies
-            )
+        let goalVal = habit.goalValue ?? 1
+        let completed = entries.filter { $0.value >= goalVal }.count
+        let rate = entries.isEmpty ? 0 : Int(Double(completed) / Double(entries.count) * 100)
+
+        return HStack(spacing: 10) {
+            statCard(value: "\(completed)", label: "Done", color: .alefSuccess)
+            statCard(value: "\(entries.count)", label: "Logged", color: .alefHealth)
+            statCard(value: "\(rate)%", label: "Rate", color: .alefMovies)
         }
     }
 
     private func statCard(value: String, label: String, color: Color) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(AlefFont.Rounded.bold(20))
+                .font(AlefFont.Rounded.bold(22))
                 .foregroundColor(color)
             Text(label)
                 .font(AlefFont.regular(11))
@@ -163,23 +182,68 @@ struct HabitDetailView: View {
         .cornerRadius(12)
     }
 
-    // MARK: - Heatmap
+    // MARK: - Calendar Section
 
-    private func heatmapSection(habit: Habit) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Last 90 days")
-                .font(AlefFont.medium(13))
-                .foregroundColor(.alefTextSecondary)
-                .textCase(.uppercase)
-                .tracking(0.8)
+    /// Monthly calendar with coloured day circles — like Grit's per-habit calendar.
+    /// Navigate between months with arrow buttons.
+    private func calendarSection(habit: Habit) -> some View {
+        VStack(spacing: 12) {
+            // Month navigator
+            HStack {
+                Button {
+                    withAnimation { changeMonth(by: -1) }
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.alefTextSecondary)
+                        .frame(width: 32, height: 32)
+                }
 
-            HeatmapGrid(entries: entries, goalValue: habit.goalValue ?? 1, color: habit.swiftUIColor)
+                Spacer()
+
+                Text(monthYearString(displayedMonth))
+                    .font(AlefFont.semibold(16))
+                    .foregroundColor(.alefText)
+
+                Spacer()
+
+                Button {
+                    withAnimation { changeMonth(by: 1) }
+                } label: {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.alefTextSecondary)
+                        .frame(width: 32, height: 32)
+                }
+            }
+
+            // Day-of-week headers
+            let dayHeaders = ["S", "M", "T", "W", "T", "F", "S"]
+            HStack(spacing: 0) {
+                ForEach(dayHeaders, id: \.self) { day in
+                    Text(day)
+                        .font(AlefFont.medium(12))
+                        .foregroundColor(.alefTextTertiary)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+
+            // Calendar grid
+            MonthGrid(
+                month: displayedMonth,
+                entries: entries,
+                goalValue: habit.goalValue ?? 1,
+                color: habit.swiftUIColor
+            )
         }
+        .padding(16)
+        .background(Color.alefSurface)
+        .cornerRadius(AlefLayout.cardRadius)
     }
 
     // MARK: - Recent Entries
 
-    private func recentEntries(habit: Habit) -> some View {
+    private func recentSection(habit: Habit) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
                 .font(AlefFont.medium(13))
@@ -191,36 +255,34 @@ struct HabitDetailView: View {
                 Text("No entries yet")
                     .font(AlefFont.regular(14))
                     .foregroundColor(.alefTextTertiary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
             } else {
                 ForEach(entries.prefix(10)) { entry in
                     HStack {
-                        // Date
                         Text(formatEntryDate(entry.date))
                             .font(AlefFont.regular(14))
                             .foregroundColor(.alefTextSecondary)
-
                         Spacer()
-
-                        // Value
                         if entry.skipped {
                             Text("Skipped")
-                                .font(AlefFont.medium(14))
+                                .font(AlefFont.medium(13))
                                 .foregroundColor(.alefTextTertiary)
                         } else {
                             let met = entry.value >= (habit.goalValue ?? 1)
-                            Image(systemName: met ? "checkmark.circle.fill" : "xmark.circle")
+                            Image(systemName: met ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(met ? habit.swiftUIColor : .alefTextTertiary)
-
                             if habit.goalType != .boolean {
                                 Text(formatValue(entry.value, habit: habit))
-                                    .font(AlefFont.Rounded.medium(14))
+                                    .font(AlefFont.Rounded.medium(13))
                                     .foregroundColor(.alefText)
                             }
                         }
                     }
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 4)
+                    if entry.id != entries.prefix(10).last?.id {
+                        Divider().background(Color.alefBorder)
+                    }
                 }
             }
         }
@@ -231,11 +293,17 @@ struct HabitDetailView: View {
 
     // MARK: - Helpers
 
-    private func completionRate(habit: Habit) -> String {
-        guard !entries.isEmpty else { return "0%" }
-        let completed = entries.filter { $0.value >= (habit.goalValue ?? 1) }.count
-        let rate = Int(Double(completed) / Double(entries.count) * 100)
-        return "\(rate)%"
+    private func changeMonth(by value: Int) {
+        let calendar = Calendar.current
+        if let newMonth = calendar.date(byAdding: .month, value: value, to: displayedMonth) {
+            displayedMonth = newMonth
+        }
+    }
+
+    private func monthYearString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM yyyy"
+        return f.string(from: date)
     }
 
     private func formatEntryDate(_ dateStr: String) -> String {
@@ -243,71 +311,127 @@ struct HabitDetailView: View {
         input.dateFormat = "yyyy-MM-dd"
         guard let date = input.date(from: dateStr) else { return dateStr }
         let output = DateFormatter()
-        output.dateFormat = "MMM d"
+        output.dateFormat = "MMM d, EEE"
         return output.string(from: date)
     }
 
     private func formatValue(_ value: Int, habit: Habit) -> String {
         switch habit.goalType {
-        case .boolean: return value > 0 ? "Done" : "Missed"
+        case .boolean: return value > 0 ? "Done" : ""
         case .numeric: return "\(value) \(habit.goalUnit ?? "")"
         case .timer:
             let mins = value / 60
             return mins < 60 ? "\(mins)m" : "\(mins/60)h \(mins%60)m"
         }
     }
+
+    /// Calculate the longest streak in the entire history.
+    private func calculateBestStreak(entries: [HabitEntry], goalValue: Int) -> Int {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        // Sort entries by date ascending for best-streak calculation
+        let sorted = entries
+            .filter { !$0.skipped && $0.value >= goalValue }
+            .compactMap { entry -> Date? in dateFormatter.date(from: entry.date) }
+            .sorted()
+
+        guard !sorted.isEmpty else { return 0 }
+
+        var best = 1
+        var current = 1
+        let calendar = Calendar.current
+
+        for i in 1..<sorted.count {
+            let diff = calendar.dateComponents([.day], from: sorted[i-1], to: sorted[i]).day ?? 0
+            if diff == 1 {
+                current += 1
+                best = max(best, current)
+            } else if diff > 1 {
+                current = 1
+            }
+            // diff == 0 means same day, skip
+        }
+
+        return best
+    }
 }
 
-// MARK: - Heatmap Grid
+// MARK: - Month Grid
 
-/// GitHub-style contribution heatmap for the last 90 days.
-/// Each cell is a day — darker colour = completed, grey = missed.
-struct HeatmapGrid: View {
+/// Monthly calendar grid with coloured circles for completed days.
+/// Like Grit's per-habit calendar view.
+struct MonthGrid: View {
+    let month: Date
     let entries: [HabitEntry]
     let goalValue: Int
     let color: Color
 
-    /// 13 columns (weeks) x 7 rows (days) = 91 days
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 3), count: 13)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
 
     var body: some View {
-        let entryMap = Dictionary(grouping: entries, by: \.date)
-            .mapValues { $0.first! }
-
         let calendar = Calendar.current
-        let today = Date()
-        let days = (0..<91).reversed().map { offset in
-            calendar.date(byAdding: .day, value: -offset, to: today)!
+        let entryMap = Dictionary(grouping: entries, by: \.date).mapValues { $0.first! }
+
+        // Get all days in this month + leading empty cells for alignment
+        let components = calendar.dateComponents([.year, .month], from: month)
+        guard let firstOfMonth = calendar.date(from: components),
+              let range = calendar.range(of: .day, in: .month, for: firstOfMonth) else {
+            return AnyView(EmptyView())
         }
 
-        LazyVGrid(columns: columns, spacing: 3) {
-            ForEach(days, id: \.self) { date in
-                let dateStr = formatDate(date)
-                let entry = entryMap[dateStr]
-                let completed = (entry?.value ?? 0) >= goalValue
-                let isToday = calendar.isDateInToday(date)
+        let firstWeekday = calendar.component(.weekday, from: firstOfMonth) - 1 // 0=Sun
+        let today = calendar.startOfDay(for: Date())
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
 
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(cellColor(completed: completed, hasEntry: entry != nil))
-                    .frame(height: 14)
-                    .overlay(
-                        // Subtle border for today
-                        RoundedRectangle(cornerRadius: 3)
-                            .stroke(isToday ? Color.alefText.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
+        return AnyView(
+            LazyVGrid(columns: columns, spacing: 6) {
+                // Leading empty cells
+                ForEach(0..<firstWeekday, id: \.self) { _ in
+                    Text("")
+                        .frame(height: 36)
+                }
+
+                // Day cells
+                ForEach(Array(range), id: \.self) { day in
+                    let date = calendar.date(byAdding: .day, value: day - 1, to: firstOfMonth)!
+                    let dateStr = dateFormatter.string(from: date)
+                    let entry = entryMap[dateStr]
+                    let completed = (entry?.value ?? 0) >= goalValue
+                    let isToday = calendar.isDate(date, inSameDayAs: today)
+                    let isFuture = date > today
+
+                    ZStack {
+                        // Background circle
+                        Circle()
+                            .fill(
+                                completed ? color :
+                                isToday ? color.opacity(0.15) :
+                                Color.clear
+                            )
+                            .frame(width: 32, height: 32)
+
+                        // Today ring
+                        if isToday && !completed {
+                            Circle()
+                                .stroke(color.opacity(0.4), lineWidth: 1.5)
+                                .frame(width: 32, height: 32)
+                        }
+
+                        // Day number
+                        Text("\(day)")
+                            .font(AlefFont.Rounded.medium(14))
+                            .foregroundColor(
+                                completed ? .alefBg :
+                                isFuture ? .alefTextTertiary.opacity(0.5) :
+                                isToday ? color :
+                                .alefTextSecondary
+                            )
+                    }
+                    .frame(height: 36)
+                }
             }
-        }
-    }
-
-    private func cellColor(completed: Bool, hasEntry: Bool) -> Color {
-        if completed { return color }
-        if hasEntry { return color.opacity(0.15) }
-        return Color.alefSurfaceSecondary.opacity(0.3)
-    }
-
-    private func formatDate(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: date)
+        )
     }
 }
