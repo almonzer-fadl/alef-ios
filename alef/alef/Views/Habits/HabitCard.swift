@@ -25,6 +25,11 @@ struct HabitCard: View {
 
     /// Tracks tap animation state for the bounce effect
     @State private var justCompleted = false
+    /// Controls the focus timer sheet for timer habits
+    @State private var showTimer = false
+
+    /// Auth token needed to pass to the timer view
+    @AppStorage("authToken") private var authToken = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -108,6 +113,15 @@ struct HabitCard: View {
         .scaleEffect(justCompleted ? 0.97 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.5), value: justCompleted)
         .animation(.spring(response: 0.3), value: habit.completed)
+        .fullScreenCover(isPresented: $showTimer) {
+            FocusTimerView(
+                habitId: habit.id,
+                habitName: habit.name,
+                targetSeconds: habit.goalValue ?? 600,
+                habitColor: habit.swiftUIColor,
+                token: authToken
+            )
+        }
     }
 
     // MARK: - Streak Badge
@@ -219,8 +233,10 @@ struct HabitCard: View {
             }
 
         case .timer:
-            // Play button
-            Button(action: onToggle) {
+            // Play button — opens the focus timer
+            Button {
+                showTimer = true
+            } label: {
                 Image(systemName: habit.completed ? "checkmark.circle.fill" : "play.circle.fill")
                     .font(.system(size: 32))
                     .foregroundColor(habit.swiftUIColor)

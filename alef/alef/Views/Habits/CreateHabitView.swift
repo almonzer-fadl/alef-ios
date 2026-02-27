@@ -30,6 +30,7 @@ struct CreateHabitView: View {
     @State private var frequency: HabitFrequency = .daily
     @State private var groupName = ""
     @State private var isSaving = false
+    @State private var customDays: Set<Int> = [] // 1=Sun, 2=Mon, ..., 7=Sat
 
     /// Preset SF Symbol icons for quick selection
     private let iconOptions = [
@@ -163,19 +164,27 @@ struct CreateHabitView: View {
 
                         // ── Frequency ────────────────────────────
                         section("Frequency") {
-                            HStack(spacing: 8) {
-                                ForEach([HabitFrequency.daily, .weekly], id: \.self) { freq in
-                                    Button {
-                                        frequency = freq
-                                    } label: {
-                                        Text(freq.label)
-                                            .font(AlefFont.medium(14))
-                                            .foregroundColor(frequency == freq ? selectedColor : .alefTextSecondary)
-                                            .frame(maxWidth: .infinity)
-                                            .frame(height: 40)
-                                            .background(frequency == freq ? selectedColor.opacity(0.1) : Color.alefSurface)
-                                            .cornerRadius(10)
+                            VStack(spacing: 10) {
+                                HStack(spacing: 8) {
+                                    ForEach(HabitFrequency.allCases, id: \.self) { freq in
+                                        Button {
+                                            frequency = freq
+                                        } label: {
+                                            Text(freq.label)
+                                                .font(AlefFont.medium(13))
+                                                .foregroundColor(frequency == freq ? selectedColor : .alefTextSecondary)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 38)
+                                                .background(frequency == freq ? selectedColor.opacity(0.1) : Color.alefSurface)
+                                                .cornerRadius(10)
+                                        }
                                     }
+                                }
+
+                                // Custom day picker — shown when frequency is "custom"
+                                if frequency == .custom {
+                                    customDayPicker
+                                        .transition(.opacity.combined(with: .move(edge: .top)))
                                 }
                             }
                         }
@@ -277,6 +286,43 @@ struct CreateHabitView: View {
 
             content()
         }
+    }
+
+    // MARK: - Custom Day Picker
+
+    /// Row of 7 day circles — tap to toggle which days this habit repeats.
+    /// Inspired by Grit's repeat schedule picker.
+    private var customDayPicker: some View {
+        let days = [
+            (1, "S"), (2, "M"), (3, "T"), (4, "W"), (5, "T"), (6, "F"), (7, "S")
+        ]
+
+        return HStack(spacing: 8) {
+            ForEach(days, id: \.0) { day, label in
+                let isSelected = customDays.contains(day)
+                Button {
+                    if isSelected {
+                        customDays.remove(day)
+                    } else {
+                        customDays.insert(day)
+                    }
+                } label: {
+                    Text(label)
+                        .font(AlefFont.Rounded.semibold(14))
+                        .foregroundColor(isSelected ? .alefBg : .alefTextSecondary)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(isSelected ? selectedColor : Color.alefSurface)
+                        )
+                        .overlay(
+                            Circle()
+                                .stroke(isSelected ? Color.clear : Color.alefBorder, lineWidth: 1)
+                        )
+                }
+            }
+        }
+        .animation(.spring(response: 0.25), value: customDays)
     }
 
     // MARK: - Save

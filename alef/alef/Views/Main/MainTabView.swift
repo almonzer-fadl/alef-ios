@@ -31,12 +31,9 @@ struct MainTabView: View {
             Group {
                 switch selectedTab {
                 case 0:
-                    PlaceholderTab(
-                        title: "Dashboard",
-                        icon: "square.grid.2x2.fill",
-                        subtitle: "Your daily snapshot",
-                        color: .alefGold
-                    )
+                    NavigationStack {
+                        DashboardView()
+                    }
                 case 1:
                     NavigationStack {
                         HabitsListView()
@@ -49,12 +46,9 @@ struct MainTabView: View {
                         color: .alefBooks
                     )
                 case 3:
-                    PlaceholderTab(
-                        title: "Settings",
-                        icon: "gearshape.fill",
-                        subtitle: "Profile, modules, preferences",
-                        color: .alefTextSecondary
-                    )
+                    NavigationStack {
+                        SettingsView()
+                    }
                 default:
                     EmptyView()
                 }
