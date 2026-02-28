@@ -110,6 +110,7 @@ struct HabitsListView: View {
                         let isToday = offset == 0
 
                         Button {
+                            Haptics.selection()
                             withAnimation(.spring(response: 0.3)) {
                                 selectedDayOffset = offset
                             }

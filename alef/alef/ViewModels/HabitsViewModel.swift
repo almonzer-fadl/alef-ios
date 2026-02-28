@@ -74,9 +74,15 @@ final class HabitsViewModel: ObservableObject {
         let newValue = habit.completed ? 0 : (habit.goalValue ?? 1)
         let body = LogEntryBody(date: todayDate, value: newValue)
 
+        // Haptic feedback — success when completing, light when uncompleting
+        if !habit.completed {
+            Haptics.success()
+        } else {
+            Haptics.light()
+        }
+
         do {
             _ = try await service.log(habitId: habit.id, body: body, token: token)
-            // Refresh the list to get updated completion status
             await fetchToday()
         } catch {
             self.error = error.localizedDescription
@@ -87,7 +93,15 @@ final class HabitsViewModel: ObservableObject {
     /// Used for water intake, page counts, etc.
     func increment(for habit: TodayHabit, by step: Int = 1) async {
         let current = habit.todayEntry?.value ?? 0
-        let body = LogEntryBody(date: todayDate, value: current + step)
+        let newValue = current + step
+        let body = LogEntryBody(date: todayDate, value: newValue)
+
+        // Haptic — success if this increment completes the goal
+        if newValue >= (habit.goalValue ?? 1) && current < (habit.goalValue ?? 1) {
+            Haptics.success()
+        } else {
+            Haptics.light()
+        }
 
         do {
             _ = try await service.log(habitId: habit.id, body: body, token: token)
