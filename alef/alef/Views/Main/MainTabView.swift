@@ -39,12 +39,9 @@ struct MainTabView: View {
                         HabitsListView()
                     }
                 case 2:
-                    PlaceholderTab(
-                        title: "Library",
-                        icon: "square.stack.fill",
-                        subtitle: "All your modules",
-                        color: .alefBooks
-                    )
+                    NavigationStack {
+                        LibraryView()
+                    }
                 case 3:
                     NavigationStack {
                         SettingsView()

@@ -234,6 +234,30 @@ struct HabitsListView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .contextMenu {
+                            Button {
+                                Task { await vm.toggleCompletion(for: habit) }
+                            } label: {
+                                Label(
+                                    habit.completed ? "Mark Incomplete" : "Mark Complete",
+                                    systemImage: habit.completed ? "xmark.circle" : "checkmark.circle.fill"
+                                )
+                            }
+
+                            Button {
+                                Task { await vm.skipHabit(for: habit) }
+                            } label: {
+                                Label("Skip Today", systemImage: "forward.fill")
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                Task { await vm.deleteHabit(id: habit.id) }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }

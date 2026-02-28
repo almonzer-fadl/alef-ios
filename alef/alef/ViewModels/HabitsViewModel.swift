@@ -110,6 +110,20 @@ final class HabitsViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Skip
+
+    /// Mark a habit as skipped for today.
+    /// Skipped habits don't break streaks.
+    func skipHabit(for habit: TodayHabit) async {
+        let body = LogEntryBody(date: todayDate, skipped: true)
+        do {
+            _ = try await service.log(habitId: habit.id, body: body, token: token)
+            await fetchToday()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     // MARK: - Delete
 
     /// Delete a habit permanently. Shows in the detail view.

@@ -27,6 +27,7 @@ struct HabitDetailView: View {
     @State private var streak = 0
     @State private var bestStreak = 0
     @State private var showDeleteAlert = false
+    @State private var showEditSheet = false
     @State private var displayedMonth = Date()
     @Environment(\.dismiss) private var dismiss
 
@@ -76,6 +77,25 @@ struct HabitDetailView: View {
         }
         .navigationTitle(habit?.name ?? "Habit")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if let habit {
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showEditSheet = true
+                    } label: {
+                        Image(systemName: "pencil")
+                            .foregroundColor(.alefTextSecondary)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showEditSheet) {
+            if let habit {
+                EditHabitView(habit: habit, token: token) {
+                    Task { await loadData() }
+                }
+            }
+        }
         .task { await loadData() }
         .alert("Delete this habit?", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) {}
