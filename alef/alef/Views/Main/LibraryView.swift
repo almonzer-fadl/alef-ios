@@ -140,6 +140,38 @@ struct LibraryView: View {
                 Task { await toggleModule(key: module.key, enabled: true) }
             }
         }
+        .background(
+            // Navigation link for enabled modules that have screens built
+            Group {
+                if isEnabled {
+                    NavigationLink(destination: destinationView(for: module.key)) {
+                        EmptyView()
+                    }
+                    .opacity(0)
+                }
+            }
+        )
+    }
+
+    // MARK: - Module Destinations
+
+    /// Returns the appropriate view for a module.
+    /// Built modules get their real screen; unbuilt ones get a placeholder.
+    @ViewBuilder
+    private func destinationView(for key: String) -> some View {
+        switch key {
+        case "habits":
+            HabitsListView()
+        case "journal":
+            JournalListView()
+        default:
+            PlaceholderTab(
+                title: modules.first { $0.key == key }?.label ?? key,
+                icon: modules.first { $0.key == key }?.icon ?? "square.fill",
+                subtitle: "Coming soon",
+                color: modules.first { $0.key == key }?.swiftUIColor ?? .alefTextSecondary
+            )
+        }
     }
 
     // MARK: - Data
