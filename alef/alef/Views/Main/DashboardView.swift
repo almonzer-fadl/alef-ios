@@ -229,7 +229,7 @@ struct DashboardView: View {
     // MARK: - Module Shortcuts
 
     /// Quick-access cards for the main modules.
-    /// These will eventually be dynamic based on enabled modules.
+    /// Tapping navigates to the module's screen.
     private var modulesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Modules")
@@ -237,9 +237,15 @@ struct DashboardView: View {
                 .foregroundColor(.alefText)
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                moduleCard(icon: "checkmark.circle.fill", name: "Habits", color: .alefHabits, subtitle: "Daily tracking")
-                moduleCard(icon: "book.fill", name: "Journal", color: .alefJournal, subtitle: "Coming soon")
-                moduleCard(icon: "heart.fill", name: "Health", color: .alefHealth, subtitle: "Coming soon")
+                NavigationLink(destination: HabitsListView()) {
+                    moduleCard(icon: "checkmark.circle.fill", name: "Habits", color: .alefHabits, subtitle: "Daily tracking")
+                }
+                NavigationLink(destination: JournalListView()) {
+                    moduleCard(icon: "book.fill", name: "Journal", color: .alefJournal, subtitle: "Write & reflect")
+                }
+                NavigationLink(destination: HealthLogView()) {
+                    moduleCard(icon: "heart.fill", name: "Health", color: .alefHealth, subtitle: "Vitals & mood")
+                }
                 moduleCard(icon: "moon.fill", name: "Sleep", color: .alefSleep, subtitle: "Coming soon")
             }
         }
