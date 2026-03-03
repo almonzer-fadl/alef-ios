@@ -164,6 +164,8 @@ struct LibraryView: View {
             HabitsListView()
         case "journal":
             JournalListView()
+        case "health":
+            HealthLogView()
         default:
             PlaceholderTab(
                 title: modules.first { $0.key == key }?.label ?? key,

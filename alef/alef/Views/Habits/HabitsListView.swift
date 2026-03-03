@@ -21,8 +21,13 @@ struct HabitsListView: View {
     @AppStorage("authToken") private var authToken = ""
 
     /// Which day is selected in the week strip.
-    /// Defaults to today — tapping other days could show history (future feature).
     @State private var selectedDayOffset = 0
+
+    /// Fires confetti when all habits are completed.
+    @State private var showConfetti = false
+
+    /// Track previous completion count to detect the "all done" moment.
+    @State private var previousCompleted = 0
 
     var body: some View {
         ZStack {
@@ -55,6 +60,9 @@ struct HabitsListView: View {
                 }
             }
 
+            // ── Confetti overlay ──────────────────────────────────
+            ConfettiView(isActive: $showConfetti)
+
             // ── FAB ──────────────────────────────────────────────
             VStack {
                 Spacer()
@@ -82,6 +90,13 @@ struct HabitsListView: View {
         }
         .refreshable {
             await vm.fetchToday()
+        }
+        .onChange(of: vm.todayHabits.filter(\.completed).count) { oldValue, newValue in
+            let total = vm.todayHabits.count
+            // Fire confetti when all habits are done and the count just increased
+            if total > 0 && newValue == total && oldValue < total {
+                showConfetti = true
+            }
         }
         .sheet(isPresented: $vm.showCreateSheet) {
             CreateHabitView(vm: vm)
