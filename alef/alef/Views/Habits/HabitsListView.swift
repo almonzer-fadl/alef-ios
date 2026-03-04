@@ -101,6 +101,14 @@ struct HabitsListView: View {
         .sheet(isPresented: $vm.showCreateSheet) {
             CreateHabitView(vm: vm)
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                NavigationLink(destination: HabitStatsView()) {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundColor(.alefTextSecondary)
+                }
+            }
+        }
     }
 
     // MARK: - Day Selector Strip
