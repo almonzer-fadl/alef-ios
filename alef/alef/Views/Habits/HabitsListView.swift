@@ -34,8 +34,15 @@ struct HabitsListView: View {
             Color.alefBg.ignoresSafeArea()
 
             if vm.isLoading {
-                ProgressView()
-                    .tint(.alefText)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: AlefLayout.itemSpacing) {
+                        ForEach(0..<5, id: \.self) { _ in
+                            SkeletonView.habitCard
+                        }
+                    }
+                    .padding(.horizontal, AlefLayout.horizontalPadding)
+                    .padding(.top, 60)
+                }
             } else if vm.todayHabits.isEmpty {
                 emptyState
             } else {
