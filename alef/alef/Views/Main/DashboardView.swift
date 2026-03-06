@@ -34,8 +34,16 @@ struct DashboardView: View {
                 VStack(spacing: AlefLayout.sectionSpacing) {
 
                     // ── Header ───────────────────────────────────
-                    header
-                        .padding(.top, 16)
+                    HStack(alignment: .bottom) {
+                        header
+                        Spacer()
+                        NavigationLink(destination: WeeklySummaryView()) {
+                            Text("This Week")
+                                .font(AlefFont.medium(13))
+                                .foregroundColor(.alefGold)
+                        }
+                    }
+                    .padding(.top, 16)
 
                     // ── Progress ring ────────────────────────────
                     progressCard
