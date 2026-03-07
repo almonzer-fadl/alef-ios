@@ -107,7 +107,7 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .preferredColorScheme(.dark)
+        // Color scheme controlled by alefApp via appearanceMode setting
     }
 }
 

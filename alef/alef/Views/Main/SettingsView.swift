@@ -64,6 +64,7 @@ struct SettingsView: View {
         .replacingOccurrences(of: "/api", with: "")
     @State private var showSignOutAlert = false
     @State private var isLoading = true
+    @AppStorage("appearanceMode") private var appearanceMode = "dark"  // dark, light, system
 
     var body: some View {
         ZStack {
@@ -78,6 +79,9 @@ struct SettingsView: View {
 
                     // ── Modules ──────────────────────────────────
                     modulesSection
+
+                    // ── Appearance ───────────────────────────────
+                    appearanceSection
 
                     // ── Server ───────────────────────────────────
                     serverSection
@@ -195,6 +199,42 @@ struct SettingsView: View {
             }
             .background(Color.alefSurface)
             .cornerRadius(AlefLayout.cardRadius)
+        }
+    }
+
+    // MARK: - Appearance Section
+
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("APPEARANCE")
+                .font(AlefFont.medium(12))
+                .foregroundColor(.alefTextTertiary)
+                .tracking(1)
+
+            HStack(spacing: 8) {
+                ForEach(["dark", "light", "system"], id: \.self) { mode in
+                    Button {
+                        Haptics.selection()
+                        withAnimation(.spring(response: 0.25)) {
+                            appearanceMode = mode
+                        }
+                    } label: {
+                        VStack(spacing: 6) {
+                            Image(systemName: mode == "dark" ? "moon.fill" : mode == "light" ? "sun.max.fill" : "gear")
+                                .font(.system(size: 18))
+                            Text(mode.capitalized)
+                                .font(AlefFont.medium(12))
+                        }
+                        .foregroundColor(appearanceMode == mode ? .alefText : .alefTextTertiary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(appearanceMode == mode ? Color.alefSurfaceSecondary.opacity(0.3) : Color.alefSurface)
+                        )
+                    }
+                }
+            }
         }
     }
 

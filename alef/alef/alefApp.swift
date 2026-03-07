@@ -19,9 +19,21 @@ import SwiftUI
 
 @main
 struct alefApp: App {
+    @AppStorage("appearanceMode") private var appearanceMode = "dark"
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(colorScheme)
+        }
+    }
+
+    /// Maps the stored appearance preference to SwiftUI's ColorScheme.
+    private var colorScheme: ColorScheme? {
+        switch appearanceMode {
+        case "dark":   return .dark
+        case "light":  return .light
+        default:       return nil  // system default
         }
     }
 }
