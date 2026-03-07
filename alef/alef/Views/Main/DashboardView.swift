@@ -73,6 +73,14 @@ struct DashboardView: View {
         .refreshable {
             await loadData()
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                NavigationLink(destination: SearchView()) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.alefTextSecondary)
+                }
+            }
+        }
     }
 
     // MARK: - Header
