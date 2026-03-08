@@ -64,7 +64,13 @@ struct SettingsView: View {
         .replacingOccurrences(of: "/api", with: "")
     @State private var showSignOutAlert = false
     @State private var isLoading = true
-    @AppStorage("appearanceMode") private var appearanceMode = "dark"  // dark, light, system
+    @AppStorage("appearanceMode") private var appearanceMode = "dark"
+    @AppStorage("dailyReminderEnabled") private var dailyReminderEnabled = false
+    @AppStorage("dailyReminderHour") private var dailyReminderHour = 9
+    @AppStorage("dailyReminderMinute") private var dailyReminderMinute = 0
+    @AppStorage("streakReminderEnabled") private var streakReminderEnabled = false
+
+    @StateObject private var notifManager = NotificationManager.shared
 
     var body: some View {
         ZStack {
@@ -79,6 +85,9 @@ struct SettingsView: View {
 
                     // ── Modules ──────────────────────────────────
                     modulesSection
+
+                    // ── Notifications ────────────────────────────
+                    notificationsSection
 
                     // ── Appearance ───────────────────────────────
                     appearanceSection
@@ -196,6 +205,116 @@ struct SettingsView: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                 }
+            }
+            .background(Color.alefSurface)
+            .cornerRadius(AlefLayout.cardRadius)
+        }
+    }
+
+    // MARK: - Notifications Section
+
+    private var notificationsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("NOTIFICATIONS")
+                .font(AlefFont.medium(12))
+                .foregroundColor(.alefTextTertiary)
+                .tracking(1)
+
+            VStack(spacing: 1) {
+                // Daily reminder toggle
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Daily Reminder")
+                            .font(AlefFont.medium(15))
+                            .foregroundColor(.alefText)
+                        Text("Get reminded to check your habits")
+                            .font(AlefFont.regular(12))
+                            .foregroundColor(.alefTextTertiary)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $dailyReminderEnabled)
+                        .tint(.alefHabits)
+                        .labelsHidden()
+                        .onChange(of: dailyReminderEnabled) { _, enabled in
+                            if enabled {
+                                Task {
+                                    await notifManager.requestAuthorization()
+                                    notifManager.scheduleDailyReminder(
+                                        hour: dailyReminderHour,
+                                        minute: dailyReminderMinute
+                                    )
+                                }
+                            } else {
+                                notifManager.cancelDailyReminder()
+                            }
+                        }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+
+                // Time picker (shown when daily reminder is on)
+                if dailyReminderEnabled {
+                    HStack {
+                        Text("Time")
+                            .font(AlefFont.regular(15))
+                            .foregroundColor(.alefText)
+                        Spacer()
+                        DatePicker("", selection: Binding(
+                            get: {
+                                var components = DateComponents()
+                                components.hour = dailyReminderHour
+                                components.minute = dailyReminderMinute
+                                return Calendar.current.date(from: components) ?? Date()
+                            },
+                            set: { date in
+                                let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+                                dailyReminderHour = comps.hour ?? 9
+                                dailyReminderMinute = comps.minute ?? 0
+                                notifManager.scheduleDailyReminder(
+                                    hour: dailyReminderHour,
+                                    minute: dailyReminderMinute
+                                )
+                            }
+                        ), displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                // Streak reminder
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Streak Nudge")
+                            .font(AlefFont.medium(15))
+                            .foregroundColor(.alefText)
+                        Text("Evening reminder if habits aren't done")
+                            .font(AlefFont.regular(12))
+                            .foregroundColor(.alefTextTertiary)
+                    }
+
+                    Spacer()
+
+                    Toggle("", isOn: $streakReminderEnabled)
+                        .tint(.alefMovies)
+                        .labelsHidden()
+                        .onChange(of: streakReminderEnabled) { _, enabled in
+                            if enabled {
+                                Task {
+                                    await notifManager.requestAuthorization()
+                                    notifManager.scheduleStreakReminder()
+                                }
+                            } else {
+                                notifManager.cancelDailyReminder()
+                            }
+                        }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
             .background(Color.alefSurface)
             .cornerRadius(AlefLayout.cardRadius)
