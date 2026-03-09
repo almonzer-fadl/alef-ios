@@ -264,6 +264,13 @@ struct FocusTimerView: View {
 
     private func startTimer() {
         timerState = .running
+
+        // Schedule a local notification in case the app is backgrounded
+        NotificationManager.shared.scheduleFocusTimerEnd(
+            in: TimeInterval(remaining),
+            habitName: habitName
+        )
+
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             Task { @MainActor in
                 elapsedSeconds += 1
@@ -278,11 +285,13 @@ struct FocusTimerView: View {
         timerState = .paused
         timer?.invalidate()
         timer = nil
+        NotificationManager.shared.cancelFocusTimer()
     }
 
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
+        NotificationManager.shared.cancelFocusTimer()
     }
 
     private func resetTimer() {
