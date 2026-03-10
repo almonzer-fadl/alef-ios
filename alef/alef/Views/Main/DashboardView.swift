@@ -262,7 +262,15 @@ struct DashboardView: View {
                 NavigationLink(destination: HealthLogView()) {
                     moduleCard(icon: "heart.fill", name: "Health", color: .alefHealth, subtitle: "Vitals & mood")
                 }
-                moduleCard(icon: "moon.fill", name: "Sleep", color: .alefSleep, subtitle: "Coming soon")
+                NavigationLink(destination: SleepLogView()) {
+                    moduleCard(icon: "moon.fill", name: "Sleep", color: .alefSleep, subtitle: "Rest & recover")
+                }
+                NavigationLink(destination: FitnessListView()) {
+                    moduleCard(icon: "dumbbell.fill", name: "Fitness", color: .alefFitness, subtitle: "Workouts")
+                }
+                NavigationLink(destination: DietDayView()) {
+                    moduleCard(icon: "fork.knife", name: "Diet", color: .alefDiet, subtitle: "Meals & macros")
+                }
             }
         }
     }

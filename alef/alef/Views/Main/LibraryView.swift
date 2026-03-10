@@ -166,6 +166,12 @@ struct LibraryView: View {
             JournalListView()
         case "health":
             HealthLogView()
+        case "sleep":
+            SleepLogView()
+        case "fitness":
+            FitnessListView()
+        case "diet":
+            DietDayView()
         default:
             PlaceholderTab(
                 title: modules.first { $0.key == key }?.label ?? key,
