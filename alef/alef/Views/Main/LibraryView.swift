@@ -172,6 +172,10 @@ struct LibraryView: View {
             FitnessListView()
         case "diet":
             DietDayView()
+        case "movies":
+            MediaListView()
+        case "books":
+            BooksListView()
         default:
             PlaceholderTab(
                 title: modules.first { $0.key == key }?.label ?? key,

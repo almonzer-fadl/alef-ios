@@ -271,6 +271,12 @@ struct DashboardView: View {
                 NavigationLink(destination: DietDayView()) {
                     moduleCard(icon: "fork.knife", name: "Diet", color: .alefDiet, subtitle: "Meals & macros")
                 }
+                NavigationLink(destination: MediaListView()) {
+                    moduleCard(icon: "film.fill", name: "Movies", color: .alefMovies, subtitle: "Watch & rate")
+                }
+                NavigationLink(destination: BooksListView()) {
+                    moduleCard(icon: "book.closed.fill", name: "Books", color: .alefBooks, subtitle: "Read & track")
+                }
             }
         }
     }
