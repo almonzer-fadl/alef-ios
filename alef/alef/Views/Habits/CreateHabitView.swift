@@ -352,13 +352,4 @@ struct CreateHabitView: View {
 
 // MARK: - Color → Hex
 
-extension Color {
-    /// Convert a SwiftUI Color to a hex string.
-    /// Used when saving the user's colour pick to the API.
-    func toHex() -> String {
-        let uiColor = UIColor(self)
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: nil)
-        return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
-    }
-}
+// MARK: - Color extension moved to AlefTheme.swift

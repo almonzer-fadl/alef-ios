@@ -98,21 +98,29 @@ extension Color {
     /// Calendar — time, planning, structure
     static let alefCalendar = Color(hex: "A78BFA")
 
+    /// Notes — warm, creative, writing
+    static let alefNotes = Color(hex: "FCD34D")
+
+    /// Reminders — urgency, action, alerts
+    static let alefReminders = Color(hex: "F472B6")
+
     /// Returns the accent colour for a module by its key string.
     /// Used when rendering dynamic module lists from the API.
     static func accent(for moduleKey: String) -> Color {
         switch moduleKey {
-        case "habits":   return .alefHabits
-        case "journal":  return .alefJournal
-        case "health":   return .alefHealth
-        case "sleep":    return .alefSleep
-        case "fitness":  return .alefFitness
-        case "diet":     return .alefDiet
-        case "movies":   return .alefMovies
-        case "books":    return .alefBooks
-        case "projects": return .alefProjects
-        case "calendar": return .alefCalendar
-        default:         return .alefGold
+        case "habits":    return .alefHabits
+        case "journal":   return .alefJournal
+        case "health":    return .alefHealth
+        case "sleep":     return .alefSleep
+        case "fitness":   return .alefFitness
+        case "diet":      return .alefDiet
+        case "movies":    return .alefMovies
+        case "books":     return .alefBooks
+        case "projects":  return .alefProjects
+        case "calendar":  return .alefCalendar
+        case "notes":     return .alefNotes
+        case "reminders": return .alefReminders
+        default:          return .alefGold
         }
     }
 
@@ -129,10 +137,12 @@ extension Color {
         .alefMovies,    // amber
         .alefBooks,     // teal
         .alefCalendar,  // violet
+        .alefNotes,     // warm amber
+        .alefReminders, // pink
     ]
 }
 
-// MARK: - Hex Colour Initialiser
+// MARK: - Hex Colour Initialiser & Conversion
 
 extension Color {
     /// Create a Color from a hex string (3, 6, or 8 characters).
@@ -159,6 +169,15 @@ extension Color {
             blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
+    }
+
+    /// Convert a SwiftUI Color to a hex string (e.g., "#A78BFA").
+    /// Used when saving colour selections to the API.
+    func toHex() -> String {
+        let uiColor = UIColor(self)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0
+        uiColor.getRed(&r, green: &g, blue: &b, alpha: nil)
+        return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
     }
 }
 
