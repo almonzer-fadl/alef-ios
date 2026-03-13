@@ -24,11 +24,12 @@ final class MediaViewModel: ObservableObject {
     
     // MARK: - Dependencies
     
+    var token: String = ""
     private let service = MediaService.shared
     
     // MARK: - Fetch Media
     
-    func fetchMedia(token: String) async {
+    func fetchMedia() async {
         isLoading = true
         errorMessage = nil
         
@@ -52,8 +53,7 @@ final class MediaViewModel: ObservableObject {
         status: MediaStatus,
         title: String,
         externalId: String?,
-        posterUrl: String?,
-        token: String
+        posterUrl: String?
     ) async -> Bool {
         do {
             let newItem = try await service.createMedia(
@@ -79,8 +79,7 @@ final class MediaViewModel: ObservableObject {
         status: MediaStatus? = nil,
         rating: Int? = nil,
         review: String? = nil,
-        progress: Int? = nil,
-        token: String
+        progress: Int? = nil
     ) async -> Bool {
         do {
             let updated = try await service.updateMedia(
@@ -105,7 +104,7 @@ final class MediaViewModel: ObservableObject {
     
     // MARK: - Delete Media
     
-    func deleteMedia(id: String, token: String) async -> Bool {
+    func deleteMedia(id: String) async -> Bool {
         do {
             try await service.deleteMedia(id: id, token: token)
             items.removeAll { $0.id == id }

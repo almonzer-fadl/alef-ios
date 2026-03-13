@@ -58,7 +58,8 @@ struct MediaListView: View {
                 MediaDetailView(item: item)
             }
             .task {
-                await viewModel.fetchMedia(token: authToken)
+                viewModel.token = authToken
+                await viewModel.fetchMedia()
             }
         }
     }
@@ -72,7 +73,7 @@ struct MediaListView: View {
                     Haptics.selection()
                     viewModel.selectedType = type
                     Task {
-                        await viewModel.fetchMedia(token: authToken)
+                        await viewModel.fetchMedia()
                     }
                 } label: {
                     Text(type.label)
@@ -119,7 +120,7 @@ struct MediaListView: View {
             Haptics.selection()
             viewModel.selectedStatus = status
             Task {
-                await viewModel.fetchMedia(token: authToken)
+                await viewModel.fetchMedia()
             }
         } label: {
             Text(label)
@@ -161,7 +162,7 @@ struct MediaListView: View {
             .padding(.bottom, 100)
         }
         .refreshable {
-            await viewModel.fetchMedia(token: authToken)
+            await viewModel.fetchMedia()
         }
     }
     

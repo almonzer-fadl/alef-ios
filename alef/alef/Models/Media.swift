@@ -81,10 +81,10 @@ struct MediaItem: Codable, Identifiable {
     var rating: Int?
     var review: String?
     var progress: Int?
-    var startedAt: String?
-    var completedAt: String?
-    let createdAt: String
-    var updatedAt: String
+    var startedAt: Date?
+    var completedAt: Date?
+    let createdAt: Date
+    var updatedAt: Date
     
     /// Convert status string to enum (with fallback)
     var statusEnum: MediaStatus {
@@ -140,8 +140,8 @@ struct CreateMediaBody: Codable {
     let rating: Int?
     let review: String?
     let progress: Int?
-    let startedAt: String?
-    let completedAt: String?
+    let startedAt: Date?
+    let completedAt: Date?
 }
 
 struct UpdateMediaBody: Codable {
@@ -149,6 +149,6 @@ struct UpdateMediaBody: Codable {
     let rating: Int?
     let review: String?
     let progress: Int?
-    let startedAt: String?
-    let completedAt: String?
+    let startedAt: Date?
+    let completedAt: Date?
 }
