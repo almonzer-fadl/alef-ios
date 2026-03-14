@@ -12,26 +12,20 @@
 //
 
 import SwiftUI
-import Combine
 
 struct BooksListView: View {
-    private let mediaService = MediaService.shared
-    @StateObject private var searchService = BookSearchService()
-    
+    @StateObject private var viewModel = BookViewModel()
     @AppStorage("authToken") private var authToken = ""
     
-    @State private var books: [MediaItem] = []
-    @State private var isLoading = false
-    @State private var selectedStatus: String? = nil
     @State private var showSearchSheet = false
     
     var body: some View {
         ZStack {
             Color.alefBg.ignoresSafeArea()
             
-            if isLoading {
+            if viewModel.isLoading {
                 loadingView
-            } else if books.isEmpty {
+            } else if viewModel.books.isEmpty {
                 emptyState
             } else {
                 ScrollView(showsIndicators: false) {
@@ -43,7 +37,7 @@ struct BooksListView: View {
                         
                         // Book cards
                         LazyVStack(spacing: AlefLayout.itemSpacing) {
-                            ForEach(books) { book in
+                            ForEach(viewModel.books) { book in
                                 NavigationLink(destination: BookDetailView(bookId: book.id)) {
                                     BookCard(book: book)
                                 }
@@ -80,10 +74,11 @@ struct BooksListView: View {
         }
         .navigationTitle("Books")
         .task {
-            await fetchBooks()
+            viewModel.token = authToken
+            await viewModel.fetchBooks()
         }
         .refreshable {
-            await fetchBooks()
+            await viewModel.fetchBooks()
         }
         .sheet(isPresented: $showSearchSheet) {
             BookSearchView()
@@ -97,62 +92,62 @@ struct BooksListView: View {
             HStack(spacing: 8) {
                 StatusChip(
                     label: "All",
-                    isSelected: selectedStatus == nil,
+                    isSelected: viewModel.selectedStatus == nil,
                     color: .alefBooks
                 ) {
                     Haptics.selection()
                     withAnimation(.spring(response: 0.3)) {
-                        selectedStatus = nil
+                        viewModel.selectedStatus = nil
                     }
-                    Task { await fetchBooks() }
+                    Task { await viewModel.fetchBooks() }
                 }
                 
                 StatusChip(
                     label: "Want to Read",
-                    isSelected: selectedStatus == "watchlist",
+                    isSelected: viewModel.selectedStatus == "watchlist",
                     color: .alefBooks
                 ) {
                     Haptics.selection()
                     withAnimation(.spring(response: 0.3)) {
-                        selectedStatus = "watchlist"
+                        viewModel.selectedStatus = "watchlist"
                     }
-                    Task { await fetchBooks() }
+                    Task { await viewModel.fetchBooks() }
                 }
                 
                 StatusChip(
                     label: "Reading",
-                    isSelected: selectedStatus == "watching",
+                    isSelected: viewModel.selectedStatus == "watching",
                     color: .alefBooks
                 ) {
                     Haptics.selection()
                     withAnimation(.spring(response: 0.3)) {
-                        selectedStatus = "watching"
+                        viewModel.selectedStatus = "watching"
                     }
-                    Task { await fetchBooks() }
+                    Task { await viewModel.fetchBooks() }
                 }
                 
                 StatusChip(
                     label: "Completed",
-                    isSelected: selectedStatus == "completed",
+                    isSelected: viewModel.selectedStatus == "completed",
                     color: .alefBooks
                 ) {
                     Haptics.selection()
                     withAnimation(.spring(response: 0.3)) {
-                        selectedStatus = "completed"
+                        viewModel.selectedStatus = "completed"
                     }
-                    Task { await fetchBooks() }
+                    Task { await viewModel.fetchBooks() }
                 }
                 
                 StatusChip(
                     label: "Dropped",
-                    isSelected: selectedStatus == "dropped",
+                    isSelected: viewModel.selectedStatus == "dropped",
                     color: .alefBooks
                 ) {
                     Haptics.selection()
                     withAnimation(.spring(response: 0.3)) {
-                        selectedStatus = "dropped"
+                        viewModel.selectedStatus = "dropped"
                     }
-                    Task { await fetchBooks() }
+                    Task { await viewModel.fetchBooks() }
                 }
             }
         }
@@ -209,7 +204,7 @@ struct BooksListView: View {
                             ForEach(0..<5) { index in
                                 Image(systemName: starIcon(index: index, rating: rating))
                                     .font(.system(size: 12))
-                                    .foregroundColor(.alefMovies)
+                                    .foregroundColor(.alefBooks)
                             }
                         }
                     }
@@ -308,33 +303,6 @@ struct BooksListView: View {
         }
     }
     
-    // MARK: - Data
-    
-    private func fetchBooks() async {
-        isLoading = true
-        do {
-            books = try await mediaService.fetchAll(
-                type: "book",
-                status: selectedStatus,
-                token: authToken
-            )
-        } catch {
-            print("Error fetching books: \(error)")
-        }
-        isLoading = false
-    }
-    
-    // MARK: - Helpers
-    
-    private static func statusLabel(_ status: String) -> String {
-        switch status {
-        case "watchlist": return "Want to Read"
-        case "watching": return "Reading"
-        case "completed": return "Completed"
-        case "dropped": return "Dropped"
-        default: return status.capitalized
-        }
-    }
 }
 
 // MARK: - Skeleton Views

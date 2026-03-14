@@ -11,19 +11,13 @@
 //
 
 import SwiftUI
-import Combine
 
 struct BookSearchView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var searchService = BookSearchService()
-    
+    @StateObject private var viewModel = BookViewModel()
     @AppStorage("authToken") private var authToken = ""
     
-    private let mediaService = MediaService.shared
-    
     @State private var query = ""
-    @State private var results: [BookSearchResult] = []
-    @State private var isSearching = false
     @State private var debounceTask: Task<Void, Never>?
     
     var body: some View {
@@ -37,11 +31,11 @@ struct BookSearchView: View {
                         .padding(.horizontal, AlefLayout.horizontalPadding)
                         .padding(.vertical, 12)
                     
-                    if isSearching {
+                    if viewModel.isSearching {
                         loadingView
-                    } else if results.isEmpty && !query.isEmpty {
+                    } else if viewModel.searchResults.isEmpty && !query.isEmpty {
                         emptyState
-                    } else if results.isEmpty {
+                    } else if viewModel.searchResults.isEmpty {
                         placeholderState
                     } else {
                         resultsList
@@ -58,6 +52,9 @@ struct BookSearchView: View {
                     .foregroundColor(.alefTextSecondary)
                 }
             }
+        }
+        .task {
+            viewModel.token = authToken
         }
     }
     
@@ -78,7 +75,7 @@ struct BookSearchView: View {
             if !query.isEmpty {
                 Button {
                     query = ""
-                    results = []
+                    viewModel.searchResults = []
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.alefTextTertiary)
@@ -95,7 +92,7 @@ struct BookSearchView: View {
     private var resultsList: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(spacing: AlefLayout.itemSpacing) {
-                ForEach(results) { result in
+                ForEach(viewModel.searchResults) { result in
                     SearchResultCard(result: result) {
                         Task {
                             await addBook(result)
@@ -252,7 +249,7 @@ struct BookSearchView: View {
         debounceTask?.cancel()
         
         guard !query.isEmpty else {
-            results = []
+            viewModel.searchResults = []
             return
         }
         
@@ -262,41 +259,15 @@ struct BookSearchView: View {
             
             guard !Task.isCancelled else { return }
             
-            await performSearch(query)
+            await viewModel.search(query: query)
         }
-    }
-    
-    private func performSearch(_ query: String) async {
-        isSearching = true
-        do {
-            results = try await searchService.search(query: query, token: authToken)
-        } catch {
-            print("Search error: \(error)")
-            results = []
-        }
-        isSearching = false
     }
     
     private func addBook(_ result: BookSearchResult) async {
-        let body = CreateMediaBody(
-            type: "book",
-            status: "watchlist",
-            title: result.title,
-            externalId: result.olid,
-            posterUrl: result.coverUrl,
-            rating: nil,
-            review: nil,
-            progress: nil,
-            startedAt: nil,
-            completedAt: nil
-        )
-        
-        do {
-            _ = try await mediaService.create(body, token: authToken)
+        let success = await viewModel.addBook(result)
+        if success {
             Haptics.success()
             dismiss()
-        } catch {
-            print("Error adding book: \(error)")
         }
     }
 }

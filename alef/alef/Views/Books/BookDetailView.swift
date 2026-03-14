@@ -19,9 +19,8 @@ import SwiftUI
 struct BookDetailView: View {
     let bookId: String
     
+    @StateObject private var viewModel = BookViewModel()
     @AppStorage("authToken") private var authToken = ""
-    
-    private let mediaService = MediaService.shared
     
     @State private var book: MediaItem?
     @State private var isLoading = true
@@ -77,6 +76,7 @@ struct BookDetailView: View {
         .navigationTitle("Book Details")
         .navigationBarTitleDisplayMode(.inline)
         .task {
+            viewModel.token = authToken
             await loadBook()
         }
         .alert("Delete this book?", isPresented: $showDeleteAlert) {
@@ -227,7 +227,7 @@ struct BookDetailView: View {
                     } label: {
                         Image(systemName: rating >= Double(index) ? "star.fill" : "star")
                             .font(.system(size: 32))
-                            .foregroundColor(rating >= Double(index) ? .alefMovies : .alefTextTertiary)
+                            .foregroundColor(rating >= Double(index) ? .alefBooks : .alefTextTertiary)
                     }
                 }
                 
@@ -296,16 +296,12 @@ struct BookDetailView: View {
     
     private func loadBook() async {
         isLoading = true
-        do {
-            book = try await mediaService.fetch(id: bookId, token: authToken)
-            if let book = book {
-                selectedStatus = book.status
-                progress = Double(book.progress ?? 0)
-                rating = book.displayRating ?? 0
-                review = book.review ?? ""
-            }
-        } catch {
-            print("Error loading book: \(error)")
+        book = await viewModel.fetchBook(id: bookId)
+        if let book = book {
+            selectedStatus = book.status
+            progress = Double(book.progress ?? 0)
+            rating = book.displayRating ?? 0
+            review = book.review ?? ""
         }
         isLoading = false
     }
@@ -316,30 +312,23 @@ struct BookDetailView: View {
         // Convert 1-5 star rating to 1-10 internal rating
         let internalRating = rating > 0 ? Int(rating * 2) : nil
         
-        let body = UpdateMediaBody(
+        if let updated = await viewModel.updateBook(
+            id: bookId,
             status: selectedStatus,
             rating: internalRating,
             review: review.isEmpty ? nil : review,
-            progress: Int(progress),
-            startedAt: nil,
-            completedAt: nil
-        )
-        
-        do {
-            book = try await mediaService.update(id: bookId, body, token: authToken)
+            progress: Int(progress)
+        ) {
+            book = updated
             Haptics.success()
-        } catch {
-            print("Error saving changes: \(error)")
         }
     }
     
     private func deleteBook() async {
-        do {
-            try await mediaService.delete(id: bookId, token: authToken)
+        let success = await viewModel.deleteBook(id: bookId)
+        if success {
             Haptics.success()
             dismiss()
-        } catch {
-            print("Error deleting book: \(error)")
         }
     }
 }

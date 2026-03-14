@@ -9,7 +9,6 @@
 //
 
 import Foundation
-import Combine
 
 // MARK: - Search Result Models
 
@@ -30,7 +29,7 @@ struct BookSearchResponse: Codable {
 
 // MARK: - Service
 
-final class BookSearchService: ObservableObject {
+struct BookSearchService {
     
     /// Search Open Library for books.
     func search(query: String, token: String) async throws -> [BookSearchResult] {
