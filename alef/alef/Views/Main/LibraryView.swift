@@ -176,6 +176,14 @@ struct LibraryView: View {
             MediaListView()
         case "books":
             BooksListView()
+        case "projects":
+            ProjectsListView()
+        case "reminders":
+            RemindersHomeView()
+        case "calendar":
+            CalendarMonthView()
+        case "notes":
+            NotesListView()
         default:
             PlaceholderTab(
                 title: modules.first { $0.key == key }?.label ?? key,
