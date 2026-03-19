@@ -45,7 +45,9 @@ struct NotesListView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: refresh) {
+                    Button {
+                        Task { await refresh() }
+                    } label: {
                         Image(systemName: "arrow.clockwise")
                             .foregroundColor(.alefText)
                     }
