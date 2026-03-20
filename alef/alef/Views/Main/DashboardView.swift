@@ -277,6 +277,18 @@ struct DashboardView: View {
                 NavigationLink(destination: BooksListView()) {
                     moduleCard(icon: "book.closed.fill", name: "Books", color: .alefBooks, subtitle: "Read & track")
                 }
+                NavigationLink(destination: CalendarMonthView()) {
+                    moduleCard(icon: "calendar", name: "Calendar", color: .alefCalendar, subtitle: "Events & plans")
+                }
+                NavigationLink(destination: NotesListView()) {
+                    moduleCard(icon: "note.text", name: "Notes", color: .alefNotes, subtitle: "Write & organise")
+                }
+                NavigationLink(destination: ProjectsListView()) {
+                    moduleCard(icon: "folder.fill", name: "Projects", color: .alefProjects, subtitle: "Tasks & boards")
+                }
+                NavigationLink(destination: RemindersHomeView()) {
+                    moduleCard(icon: "checklist", name: "Reminders", color: .alefReminders, subtitle: "To-dos & lists")
+                }
             }
         }
     }
